@@ -27,7 +27,7 @@ jobs:
     - name: 🔍 Run Monitor
       env:
         GIST_ID: ${{ secrets.GIST_ID }}
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        GH_TOKEN: ${{ secrets.GH_TOKEN }}
       run: python vaipromo_monitor.py
     
     - name: 📊 Summary
