@@ -11,8 +11,12 @@ import os
 import requests
 import time
 from datetime import datetime
+from zoneinfo import ZoneInfo
 from pathlib import Path
 from playwright.sync_api import sync_playwright
+
+# Fuso horário de São Paulo (UTC-3 ou -2 dependendo do horário de verão)
+agora = datetime.now(ZoneInfo("America/Sao_Paulo"))
 
 # Configuração de logging
 logging.basicConfig(level=logging.INFO, format='[%(asctime)s] %(message)s')
@@ -235,7 +239,7 @@ class VaiPromoMonitor:
 </head>
 <body>
     <h1>VaiPromo Monitor - Resultados</h1>
-    <p>Relatório gerado em: {datetime.now().strftime('%d/%m/%Y %H:%M:%S')}</p>
+    print(f"<p>Relatório gerado em: {agora.strftime('%d/%m/%Y %H:%M:%S')}</p>")
     <p>Total de consultas: {len(self.resultados)}</p>
     <p>Total de voos: {sum(len(r.get('voos', [])) for r in self.resultados)}</p>
 """
@@ -359,4 +363,5 @@ def main():
 if __name__ == "__main__":
 
     main()
+
 
