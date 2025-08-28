@@ -329,10 +329,10 @@ class VaiPromoMonitor:
             self.salvar_local()
             
             # Enviar para Gist se configurado
-            if os.getenv('GIST_ID') and os.getenv('GITHUB_TOKEN'):
+            if os.getenv('GIST_ID') and os.getenv('GH_TOKEN'):
                 self.enviar_para_gist()
             else:
-                logging.info("GIST_ID ou GITHUB_TOKEN não configurados - apenas salvando localmente")
+                logging.info("GIST_ID ou GH_TOKEN não configurados - apenas salvando localmente")
             
             # Resumo
             total_voos = sum(len(r.get('voos', [])) for r in self.resultados)
@@ -359,3 +359,4 @@ def main():
 if __name__ == "__main__":
 
     main()
+
