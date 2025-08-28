@@ -278,10 +278,10 @@ class VaiPromoMonitor:
     def enviar_para_gist(self):
         """Envia HTML para GitHub Gist"""
         gist_id = os.getenv('GIST_ID')
-        github_token = os.getenv('GITHUB_TOKEN')
+        github_token = os.getenv('GH_TOKEN')
         
         if not gist_id or not github_token:
-            logging.error("GIST_ID ou GITHUB_TOKEN não configurados")
+            logging.error("GIST_ID ou GH_TOKEN não configurados")
             return False
         
         try:
@@ -357,4 +357,5 @@ def main():
         exit(1)
 
 if __name__ == "__main__":
+
     main()
