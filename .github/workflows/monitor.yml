@@ -1,0 +1,38 @@
+name: 🛫 VaiPromo Monitor
+
+on:
+  schedule:
+    - cron: '0 */6 * * *'  # A cada 6 horas
+  workflow_dispatch:
+
+jobs:
+  monitor:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    
+    steps:
+    - name: 📥 Checkout
+      uses: actions/checkout@v4
+    
+    - name: 🐍 Setup Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.12'
+    
+    - name: 📦 Install dependencies
+      run: |
+        pip install playwright requests
+        playwright install chromium --with-deps
+    
+    - name: 🔍 Run Monitor
+      env:
+        GIST_ID: ${{ secrets.GIST_ID }}
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: python vaipromo_monitor.py
+    
+    - name: 📊 Summary
+      if: always()
+      run: |
+        echo "## 🛫 VaiPromo Monitor" >> $GITHUB_STEP_SUMMARY
+        echo "- **Status:** ${{ job.status }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **Relatório HTML:** https://gist.github.com/${{ secrets.GIST_ID }}#file-vaipromo_report-html" >> $GITHUB_STEP_SUMMARY
