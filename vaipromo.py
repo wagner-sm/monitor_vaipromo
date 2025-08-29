@@ -239,7 +239,7 @@ class VaiPromoMonitor:
 </head>
 <body>
     <h1>VaiPromo Monitor - Resultados</h1>
-    print(f"<p>Relatório gerado em: {agora.strftime('%d/%m/%Y %H:%M:%S')}</p>")
+    <p>Relatório gerado em: {agora.strftime('%d/%m/%Y %H:%M:%S')}</p>
     <p>Total de consultas: {len(self.resultados)}</p>
     <p>Total de voos: {sum(len(r.get('voos', [])) for r in self.resultados)}</p>
 """
@@ -363,5 +363,6 @@ def main():
 if __name__ == "__main__":
 
     main()
+
 
 
