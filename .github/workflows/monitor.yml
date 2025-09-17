@@ -2,11 +2,11 @@ name: 🛫 VaiPromo Monitor (publicar no Pages)
 
 on:
   schedule:
-    - cron: '0 3,15 * * *'  # a cada 12 horas (cron em UTC)
+    - cron: '0 3,15 * * *'  # meia-noite e meio-dia em São Paulo (03:00 e 15:00 UTC)
   workflow_dispatch:
 
 permissions:
-  contents: write  # necessário para commitar/empurrar para o repositório
+  contents: write
 
 jobs:
   monitor:
@@ -36,7 +36,7 @@ jobs:
       run: |
         mkdir -p docs
         if [ -f relatorio.html ]; then
-          cp relatorio.html docs/vaipromo_report.html
+          cp relatorio.html docs/index.html
         else
           echo "Arquivo relatorio.html não encontrado" && exit 1
         fi
@@ -45,7 +45,7 @@ jobs:
       run: |
         git config user.name "github-actions[bot]"
         git config user.email "github-actions[bot]@users.noreply.github.com"
-        git add docs/vaipromo_report.html
+        git add docs/index.html
         git commit -m "Atualiza relatório VaiPromo — run #${{ github.run_number }} - ${{ github.run_id }}" || echo "Sem alterações para commitar"
         git push origin HEAD:main
       env:
@@ -56,4 +56,4 @@ jobs:
       run: |
         echo "## 🛫 VaiPromo Monitor" >> $GITHUB_STEP_SUMMARY
         echo "- **Status:** ${{ job.status }}" >> $GITHUB_STEP_SUMMARY
-        echo "- **Relatório (Pages):** https://wagner-sm.github.io/monitor_vaipromo/vaipromo_report.html" >> $GITHUB_STEP_SUMMARY
+        echo "- **Relatório (Pages):** https://wagner-sm.github.io/monitor_vaipromo/" >> $GITHUB_STEP_SUMMARY
