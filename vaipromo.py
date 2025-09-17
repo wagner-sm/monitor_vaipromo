@@ -26,9 +26,10 @@ class VaiPromoMonitor:
     def carregar_config(self):
         """Carrega configurações do config.json"""
         try:
-            with open('config.json', 'r', encoding='utf-8') as f:
+            with open("config.json", "r", encoding="utf-8") as f:
                 config = json.load(f)
-            logging.info(f"Configuração carregada: {len(config.get('CONSULTAS', []))} consultas")
+            consultas = config.get("CONSULTAS", [])
+            logging.info(f"Configuração carregada: {len(consultas)} consultas")
             return config
         except FileNotFoundError:
             logging.error("config.json não encontrado. Crie um config.json com chave 'CONSULTAS'.")
@@ -39,13 +40,15 @@ class VaiPromoMonitor:
 
     def trigger_change_events(self, page, selector):
         """Dispara eventos de mudança no elemento"""
-        page.evaluate(f'''() => {{
+        page.evaluate(
+            f"""() => {{
             const input = document.querySelector('{selector}');
             if (input) {{
                 input.dispatchEvent(new Event('change', {{ bubbles: true }}));
                 input.dispatchEvent(new Event('input', {{ bubbles: true }}));
             }}
-        }}''')
+        }}"""
+        )
 
     def preencher_localizacao(self, page, data_cy, sigla):
         """Preenche campo de localização (origem/destino)"""
@@ -56,7 +59,7 @@ class VaiPromoMonitor:
         self.trigger_change_events(page, f'[data-cy="{data_cy}"]')
         page.wait_for_function(
             f'document.querySelector("[data-cy=\\\"{data_cy}\\\"]").value.includes("{sigla}")',
-            timeout=3000
+            timeout=3000,
         )
 
     def navegar_para_data(self, page, data_str):
@@ -67,111 +70,29 @@ class VaiPromoMonitor:
             mes_str = page.query_selector("div[class*='monthTitle'] strong").inner_text()
             ano_str = page.query_selector("div[class*='monthTitle'] span").inner_text()
             mes_map = {
-                "Janeiro": 1, "Fevereiro": 2, "Março": 3, "Abril": 4,
-                "Maio": 5, "Junho": 6, "Julho": 7, "Agosto": 8,
-                "Setembro": 9, "Outubro": 10, "Novembro": 11, "Dezembro": 12
+                "Janeiro": 1,
+                "Fevereiro": 2,
+                "Março": 3,
+                "Abril": 4,
+                "Maio": 5,
+                "Junho": 6,
+                "Julho": 7,
+                "Agosto": 8,
+                "Setembro": 9,
+                "Outubro": 10,
+                "Novembro": 11,
+                "Dezembro": 12,
             }
             return datetime(int(ano_str), mes_map[mes_str], 1)
 
         page.wait_for_selector("div[class*='monthTitle']", timeout=5000)
 
         # Navegar até o mês correto (avança mês enquanto data atual < desejada)
-        for _ in range(12):  # limite de iterações para evitar loop infinito
+        for _ in range(24):  # limite de iterações para evitar loop infinito
             data_atual = obter_data_calendario()
-            if (data_atual.year > data_desejada.year) or \
-               (data_atual.year == data_desejada.year and data_atual.month >= data_desejada.month):
-                break
-            page.locator('button[data-cy="data-range-picker-next"]').first.click()
-            page.wait_for_timeout(300)
-
-        # Clicar na data
-        data_formatada = data_de[object Object]Desculpe — a mensagem anterior cortou o código. Segue o arquivo completo e corrigido. Substitua o conteúdo atual de vaipromo.py por este (salva diretamente em docs/index.html):
-
-```python
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-"""
-VaiPromo Monitor - Versão corrigida para GitHub Actions.
-Salva o relatório diretamente em docs/index.html
-"""
-
-import json
-import logging
-import os
-import time
-from datetime import datetime
-from zoneinfo import ZoneInfo
-from playwright.sync_api import sync_playwright
-
-# Configuração de logging
-logging.basicConfig(level=logging.INFO, format='[%(asctime)s] %(message)s')
-
-
-class VaiPromoMonitor:
-    def __init__(self):
-        self.config = self.carregar_config()
-        self.resultados = []
-        self.vaidepromo_url = "https://www.vaidepromo.com.br/passagens-aereas/"
-        # tempo em ms para page.wait_for_timeout (Playwright usa ms)
-        self.tempo_espera = 10000
-
-    def carregar_config(self):
-        """Carrega configurações do config.json"""
-        try:
-            with open('config.json', 'r', encoding='utf-8') as f:
-                config = json.load(f)
-            logging.info(f"Configuração carregada: {len(config.get('CONSULTAS', []))} consultas")
-            return config
-        except FileNotFoundError:
-            logging.error("config.json não encontrado. Crie um config.json com chave 'CONSULTAS'.")
-            raise
-        except Exception as e:
-            logging.error(f"Erro ao carregar config.json: {e}")
-            raise
-
-    def trigger_change_events(self, page, selector):
-        """Dispara eventos de mudança no elemento"""
-        page.evaluate(f'''() => {{
-            const input = document.querySelector('{selector}');
-            if (input) {{
-                input.dispatchEvent(new Event('change', {{ bubbles: true }}));
-                input.dispatchEvent(new Event('input', {{ bubbles: true }}));
-            }}
-        }}''')
-
-    def preencher_localizacao(self, page, data_cy, sigla):
-        """Preenche campo de localização (origem/destino)"""
-        page.locator(f'[data-cy="{data_cy}"]').click()
-        page.locator(f'[data-cy="{data_cy}"]').fill(sigla)
-        page.wait_for_selector(f'[role="option"]:has-text("{sigla}")', timeout=3000)
-        page.locator(f'[role="option"]:has-text("{sigla}")').first.click()
-        self.trigger_change_events(page, f'[data-cy="{data_cy}"]')
-        page.wait_for_function(
-            f'document.querySelector("[data-cy=\\\"{data_cy}\\\"]").value.includes("{sigla}")',
-            timeout=3000
-        )
-
-    def navegar_para_data(self, page, data_str):
-        """Navega para a data desejada no calendário"""
-        data_desejada = datetime.strptime(data_str, "%d/%m/%Y")
-
-        def obter_data_calendario():
-            mes_str = page.query_selector("div[class*='monthTitle'] strong").inner_text()
-            ano_str = page.query_selector("div[class*='monthTitle'] span").inner_text()
-            mes_map = {
-                "Janeiro": 1, "Fevereiro": 2, "Março": 3, "Abril": 4,
-                "Maio": 5, "Junho": 6, "Julho": 7, "Agosto": 8,
-                "Setembro": 9, "Outubro": 10, "Novembro": 11, "Dezembro": 12
-            }
-            return datetime(int(ano_str), mes_map[mes_str], 1)
-
-        page.wait_for_selector("div[class*='monthTitle']", timeout=5000)
-
-        # Navegar até o mês correto (avança mês enquanto data atual < desejada)
-        for _ in range(12):  # limite de iterações para evitar loop infinito
-            data_atual = obter_data_calendario()
-            if (data_atual.year > data_desejada.year) or \
-               (data_atual.year == data_desejada.year and data_atual.month >= data_desejada.month):
+            if (data_atual.year > data_desejada.year) or (
+                data_atual.year == data_desejada.year and data_atual.month >= data_desejada.month
+            ):
                 break
             page.locator('button[data-cy="data-range-picker-next"]').first.click()
             page.wait_for_timeout(300)
@@ -180,10 +101,12 @@ class VaiPromoMonitor:
         data_formatada = data_desejada.strftime("%d-%m-%Y")
         date_selector = f'button[data-cy="{data_formatada}"]'
         page.wait_for_selector(date_selector, timeout=5000)
-        page.evaluate(f'''() => {{
+        page.evaluate(
+            f"""() => {{
             const dateButton = document.querySelector('{date_selector}');
             if (dateButton) dateButton.scrollIntoView({{ behavior: "smooth", block: "center" }});
-        }}''')
+        }}"""
+        )
         page.locator(date_selector).first.click(force=True)
 
     def wait_for_all_results(self, page, timeout=30):
@@ -238,17 +161,13 @@ class VaiPromoMonitor:
 
     def executar_consulta(self, consulta):
         """Executa uma consulta específica"""
-        origem = consulta['origem']
-        destino = consulta['destino']
-        data = consulta['data']
+        origem = consulta.get("origem")
+        destino = consulta.get("destino")
+        data = consulta.get("data")
 
         logging.info(f"Consultando {origem} → {destino} em {data}")
 
-        resultado = {
-            'consulta': consulta,
-            'timestamp': datetime.now().isoformat(),
-            'voos': []
-        }
+        resultado = {"consulta": consulta, "timestamp": datetime.now().isoformat(), "voos": []}
 
         try:
             with sync_playwright() as playwright:
@@ -259,10 +178,10 @@ class VaiPromoMonitor:
                 # Navegar para VaiPromo
                 page.goto(self.vaidepromo_url)
 
-                # Configurar busca
+                # Configurar busca (os seletores podem variar com o site)
                 page.get_by_role("button", name="Só ida ou volta").click()
-                self.preencher_localizacao(page, 'departure', origem)
-                self.preencher_localizacao(page, 'arrival', destino)
+                self.preencher_localizacao(page, "departure", origem)
+                self.preencher_localizacao(page, "arrival", destino)
                 page.get_by_role("textbox", name="Ida").nth(1).click()
                 self.navegar_para_data(page, data)
                 page.get_by_role("button", name="Encontrar voos").click()
@@ -280,8 +199,8 @@ class VaiPromoMonitor:
 
                 # Extrair voos
                 voos = self.extrair_voos(page)
-                resultado['voos'] = voos
-                resultado['url'] = page.url
+                resultado["voos"] = voos
+                resultado["url"] = page.url
 
                 logging.info(f"Encontrados {len(voos)} voos")
 
@@ -291,7 +210,7 @@ class VaiPromoMonitor:
         except Exception as e:
             error_msg = f"Erro na consulta {origem} → {destino}: {str(e)}"
             logging.error(error_msg)
-            resultado['error'] = error_msg
+            resultado["error"] = error_msg
 
         return resultado
 
@@ -299,7 +218,7 @@ class VaiPromoMonitor:
         """Executa todas as consultas configuradas"""
         logging.info("Iniciando monitoramento VaiPromo")
 
-        consultas = self.config.get('CONSULTAS', [])
+        consultas = self.config.get("CONSULTAS", [])
         for i, consulta in enumerate(consultas, 1):
             logging.info(f"Consulta {i}/{len(consultas)}")
             resultado = self.executar_consulta(consulta)
@@ -307,7 +226,7 @@ class VaiPromoMonitor:
 
             # Delay entre consultas (exceto na última)
             if i < len(consultas):
-                delay = self.config.get('DELAY_ENTRE_CONSULTAS', 5)
+                delay = self.config.get("DELAY_ENTRE_CONSULTAS", 5)
                 logging.info(f"Aguardando {delay}s...")
                 time.sleep(delay)
 
@@ -337,32 +256,32 @@ class VaiPromoMonitor:
     <p>Total de voos: {sum(len(r.get('voos', [])) for r in self.resultados)}</p>
 """
         for resultado in self.resultados:
-            consulta = resultado['consulta']
-            descricao = consulta.get('descricao', '')
+            consulta = resultado.get("consulta", {})
+            descricao = consulta.get("descricao", "")
 
             html += f"""
     <div class="consulta">
-    <h2>{consulta['origem']} → {consulta['destino']} - {consulta['data']}</h2>
+    <h2>{consulta.get('origem', '')} → {consulta.get('destino', '')} - {consulta.get('data', '')}</h2>
     {f'<p><em>{descricao}</em></p>' if descricao else ''}
 """
 
-            if 'error' in resultado:
+            if "error" in resultado:
                 html += f'    <div class="voo error">❌ Erro: {resultado["error"]}</div>\n'
             else:
-                voos = resultado.get('voos', [])
+                voos = resultado.get("voos", [])
                 if voos:
                     # Destacar o voo mais barato (presumindo primeiro)
                     for i, voo in enumerate(voos):
-                        classe = 'melhor' if i == 0 else ''
-                        destaque = '🏆 ' if i == 0 else ''
+                        classe = "melhor" if i == 0 else ""
+                        destaque = "🏆 " if i == 0 else ""
                         html += f'    <div class="voo {classe}">{destaque}{voo["companhia"]}: {voo["preco"]}</div>\n'
                 else:
-                    html += '    <div class="voo">Nenhum voo encontrado</div>\n'
+                    html += "    <div class=\"voo\">Nenhum voo encontrado</div>\n"
 
-                if 'url' in resultado:
+                if "url" in resultado:
                     html += f'    <p><a href="{resultado["url"]}" target="_blank">🔗 Ver no VaiPromo</a></p>\n'
 
-            html += '    </div>\n'
+            html += "    </div>\n"
 
         html += """
 </body>
@@ -374,8 +293,8 @@ class VaiPromoMonitor:
         try:
             html = self.gerar_relatorio_html()
             # garante que a pasta docs exista
-            os.makedirs('docs', exist_ok=True)
-            with open('docs/index.html', 'w', encoding='utf-8') as f:
+            os.makedirs("docs", exist_ok=True)
+            with open("docs/index.html", "w", encoding="utf-8") as f:
                 f.write(html)
             logging.info("Relatório salvo localmente: docs/index.html")
         except Exception as e:
@@ -387,11 +306,11 @@ class VaiPromoMonitor:
             self.executar_monitoramento()
             self.salvar_local()
 
-            total_voos = sum(len(r.get('voos', [])) for r in self.resultados)
-            sucessos = len([r for r in self.resultados if 'error' not in r])
+            total_voos = sum(len(r.get("voos", [])) for r in self.resultados)
+            sucessos = len([r for r in self.resultados if "error" not in r])
 
-            logging.info("🎉 Execução concluída!")
-            logging.info(f"📊 {len(self.resultados)} consultas, {sucessos} sucessos, {total_voos} voos")
+            logging.info("Execução concluída!")
+            logging.info(f"{len(self.resultados)} consultas, {sucessos} sucessos, {total_voos} voos")
 
         except Exception as e:
             logging.error(f"Erro na execução: {e}")
