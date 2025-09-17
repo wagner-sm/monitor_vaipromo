@@ -2,7 +2,7 @@ name: 🛫 VaiPromo Monitor (publicar no Pages)
 
 on:
   schedule:
-    - cron: '0 */12 * * *'  # a cada 12 horas (cron em UTC)
+    - cron: '0 3,15 * * *'  # a cada 12 horas (cron em UTC)
   workflow_dispatch:
 
 permissions:
