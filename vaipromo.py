@@ -276,15 +276,17 @@ class VaiPromoMonitor:
 </html>"""
         return html
 
-    def salvar_local(self):
-        """Salva HTML localmente"""
-        try:
-            html = self.gerar_relatorio_html()
-            with open('relatorio.html', 'w', encoding='utf-8') as f:
-                f.write(html)
-            logging.info("Relatório salvo localmente: relatorio.html")
-        except Exception as e:
-            logging.error(f"Erro ao salvar arquivo local: {e}")
+    def salvar_local(self):  
+    """Salva HTML diretamente em docs/index.html"""  
+    try:  
+        html = self.gerar_relatorio_html()  
+        # garante que a pasta docs exista  
+        os.makedirs('docs', exist_ok=True)  
+        with open('docs/index.html', 'w', encoding='utf-8') as f:  
+            f.write(html)  
+        logging.info("Relatório salvo localmente: docs/index.html")  
+    except Exception as e:  
+        logging.error(f"Erro ao salvar arquivo local: {e}")
 
     def executar(self):
         """Método principal"""
@@ -317,3 +319,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
