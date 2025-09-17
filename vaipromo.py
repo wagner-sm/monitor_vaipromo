@@ -1,5 +1,98 @@
 """
-VaiPromo Monitor - Versão ajustada para rodar em GitHub Actions e salvar relatorio.html em docs/
+VaiPromo Monitor - Versão corrigida para GitHub Actions.
+Salva o relatório diretamente em docs/index.html
+"""
+
+import json
+import logging
+import os
+import time
+from datetime import datetime
+from zoneinfo import ZoneInfo
+from playwright.sync_api import sync_playwright
+
+# Configuração de logging
+logging.basicConfig(level=logging.INFO, format='[%(asctime)s] %(message)s')
+
+
+class VaiPromoMonitor:
+    def __init__(self):
+        self.config = self.carregar_config()
+        self.resultados = []
+        self.vaidepromo_url = "https://www.vaidepromo.com.br/passagens-aereas/"
+        # tempo em ms para page.wait_for_timeout (Playwright usa ms)
+        self.tempo_espera = 10000
+
+    def carregar_config(self):
+        """Carrega configurações do config.json"""
+        try:
+            with open('config.json', 'r', encoding='utf-8') as f:
+                config = json.load(f)
+            logging.info(f"Configuração carregada: {len(config.get('CONSULTAS', []))} consultas")
+            return config
+        except FileNotFoundError:
+            logging.error("config.json não encontrado. Crie um config.json com chave 'CONSULTAS'.")
+            raise
+        except Exception as e:
+            logging.error(f"Erro ao carregar config.json: {e}")
+            raise
+
+    def trigger_change_events(self, page, selector):
+        """Dispara eventos de mudança no elemento"""
+        page.evaluate(f'''() => {{
+            const input = document.querySelector('{selector}');
+            if (input) {{
+                input.dispatchEvent(new Event('change', {{ bubbles: true }}));
+                input.dispatchEvent(new Event('input', {{ bubbles: true }}));
+            }}
+        }}''')
+
+    def preencher_localizacao(self, page, data_cy, sigla):
+        """Preenche campo de localização (origem/destino)"""
+        page.locator(f'[data-cy="{data_cy}"]').click()
+        page.locator(f'[data-cy="{data_cy}"]').fill(sigla)
+        page.wait_for_selector(f'[role="option"]:has-text("{sigla}")', timeout=3000)
+        page.locator(f'[role="option"]:has-text("{sigla}")').first.click()
+        self.trigger_change_events(page, f'[data-cy="{data_cy}"]')
+        page.wait_for_function(
+            f'document.querySelector("[data-cy=\\\"{data_cy}\\\"]").value.includes("{sigla}")',
+            timeout=3000
+        )
+
+    def navegar_para_data(self, page, data_str):
+        """Navega para a data desejada no calendário"""
+        data_desejada = datetime.strptime(data_str, "%d/%m/%Y")
+
+        def obter_data_calendario():
+            mes_str = page.query_selector("div[class*='monthTitle'] strong").inner_text()
+            ano_str = page.query_selector("div[class*='monthTitle'] span").inner_text()
+            mes_map = {
+                "Janeiro": 1, "Fevereiro": 2, "Março": 3, "Abril": 4,
+                "Maio": 5, "Junho": 6, "Julho": 7, "Agosto": 8,
+                "Setembro": 9, "Outubro": 10, "Novembro": 11, "Dezembro": 12
+            }
+            return datetime(int(ano_str), mes_map[mes_str], 1)
+
+        page.wait_for_selector("div[class*='monthTitle']", timeout=5000)
+
+        # Navegar até o mês correto (avança mês enquanto data atual < desejada)
+        for _ in range(12):  # limite de iterações para evitar loop infinito
+            data_atual = obter_data_calendario()
+            if (data_atual.year > data_desejada.year) or \
+               (data_atual.year == data_desejada.year and data_atual.month >= data_desejada.month):
+                break
+            page.locator('button[data-cy="data-range-picker-next"]').first.click()
+            page.wait_for_timeout(300)
+
+        # Clicar na data
+        data_formatada = data_de[object Object]Desculpe — a mensagem anterior cortou o código. Segue o arquivo completo e corrigido. Substitua o conteúdo atual de vaipromo.py por este (salva diretamente em docs/index.html):
+
+```python
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+VaiPromo Monitor - Versão corrigida para GitHub Actions.
+Salva o relatório diretamente em docs/index.html
 """
 
 import json
@@ -276,17 +369,17 @@ class VaiPromoMonitor:
 </html>"""
         return html
 
-    def salvar_local(self):  
-    """Salva HTML diretamente em docs/index.html"""  
-    try:  
-        html = self.gerar_relatorio_html()  
-        # garante que a pasta docs exista  
-        os.makedirs('docs', exist_ok=True)  
-        with open('docs/index.html', 'w', encoding='utf-8') as f:  
-            f.write(html)  
-        logging.info("Relatório salvo localmente: docs/index.html")  
-    except Exception as e:  
-        logging.error(f"Erro ao salvar arquivo local: {e}")
+    def salvar_local(self):
+        """Salva HTML diretamente em docs/index.html"""
+        try:
+            html = self.gerar_relatorio_html()
+            # garante que a pasta docs exista
+            os.makedirs('docs', exist_ok=True)
+            with open('docs/index.html', 'w', encoding='utf-8') as f:
+                f.write(html)
+            logging.info("Relatório salvo localmente: docs/index.html")
+        except Exception as e:
+            logging.error(f"Erro ao salvar arquivo local: {e}")
 
     def executar(self):
         """Método principal"""
@@ -319,4 +412,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
