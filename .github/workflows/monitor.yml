@@ -1,38 +1,59 @@
-name: 🛫 VaiPromo Monitor
+name: 🛫 VaiPromo Monitor (publicar no Pages)
 
 on:
   schedule:
-    - cron: '0 */6 * * *'  # A cada 6 horas
+    - cron: '0 */12 * * *'  # a cada 12 horas (cron em UTC)
   workflow_dispatch:
+
+permissions:
+  contents: write  # necessário para commitar/empurrar para o repositório
 
 jobs:
   monitor:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
-    
+    timeout-minutes: 60
+
     steps:
     - name: 📥 Checkout
       uses: actions/checkout@v4
-    
+      with:
+        persist-credentials: true
+
     - name: 🐍 Setup Python
       uses: actions/setup-python@v4
       with:
         python-version: '3.12'
-    
+
     - name: 📦 Install dependencies
       run: |
         pip install playwright requests
         playwright install chromium --with-deps
-    
+
     - name: 🔍 Run Monitor
-      env:
-        GIST_ID: ${{ secrets.GIST_ID }}
-        GH_TOKEN: ${{ secrets.GH_TOKEN }}
       run: python vaipromo.py
-    
+
+    - name: 📁 Prepare pages content
+      run: |
+        mkdir -p docs
+        if [ -f relatorio.html ]; then
+          cp relatorio.html docs/vaipromo_report.html
+        else
+          echo "Arquivo relatorio.html não encontrado" && exit 1
+        fi
+
+    - name: 🔧 Commit & Push relatório para main/docs
+      run: |
+        git config user.name "github-actions[bot]"
+        git config user.email "github-actions[bot]@users.noreply.github.com"
+        git add docs/vaipromo_report.html
+        git commit -m "Atualiza relatório VaiPromo — run #${{ github.run_number }} - ${{ github.run_id }}" || echo "Sem alterações para commitar"
+        git push origin HEAD:main
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
     - name: 📊 Summary
       if: always()
       run: |
         echo "## 🛫 VaiPromo Monitor" >> $GITHUB_STEP_SUMMARY
         echo "- **Status:** ${{ job.status }}" >> $GITHUB_STEP_SUMMARY
-        echo "- **Relatório HTML:** https://gist.github.com/${{ secrets.GIST_ID }}#file-vaipromo_report-html" >> $GITHUB_STEP_SUMMARY
+        echo "- **Relatório (Pages):** https://wagner-sm.github.io/monitor_vaipromo/vaipromo_report.html" >> $GITHUB_STEP_SUMMARY
