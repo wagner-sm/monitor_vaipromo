@@ -29,17 +29,24 @@ jobs:
         pip install playwright requests
         playwright install chromium --with-deps
 
-    - name: 🔍 Run Monitor
-      run: python vaipromo.py
-
-    - name: 📁 Prepare pages content
+    - name: 🔍 Run Monitor (executa vaipromo.py)
       run: |
-        mkdir -p docs
-        if [ -f relatorio.html ]; then
-          cp relatorio.html docs/index.html
-        else
-          echo "Arquivo relatorio.html não encontrado" && exit 1
+        python vaipromo.py
+
+    - name: 🔎 Debug - listar arquivos gerados
+      run: |
+        echo "Conteúdo da raiz do repo:"
+        ls -la
+        echo "Conteúdo da pasta docs (se existir):"
+        ls -la docs || true
+
+    - name: 📁 Verify pages content (garante docs/index.html)
+      run: |
+        if [ ! -f docs/index.html ]; then
+          echo "Erro: docs/index.html não encontrado. O script deve gravar em docs/index.html"
+          exit 1
         fi
+        echo "docs/index.html encontrado OK"
 
     - name: 🔧 Commit & Push relatório para main/docs
       run: |
