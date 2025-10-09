@@ -1,0 +1,43 @@
+name: VaiPromo Monitor
+
+on:
+  schedule:
+    # Executa 2 vezes por dia
+    - cron: '0 9,21 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write  # necessário para publicar no GitHub Pages
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout do código
+        uses: actions/checkout@v4
+
+      - name: Configurar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Instalar dependências
+        run: |
+          pip install -r requirements.txt
+          playwright install chromium
+
+      - name: Executar script VaiPromo
+        run: python main.py
+
+      - name: Preparar diretório para o Pages
+        run: |
+          mkdir -p public
+          mv relatorio.html public/index.html
+
+      - name: Publicar no GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./public
+          publish_branch: gh-pages
