@@ -3,7 +3,10 @@ import logging
 import time
 from datetime import datetime
 from playwright.sync_api import sync_playwright
+from datetime import datetime
+from zoneinfo import ZoneInfo
 
+horario_brasilia = datetime.now(ZoneInfo('America/Sao_Paulo'))
 # Configuração de logging
 logging.basicConfig(level=logging.INFO, format='[%(asctime)s] %(message)s')
 
@@ -225,7 +228,7 @@ class VaiPromoMonitor:
 </head>
 <body>
     <h1>VaiPromo Monitor - Resultados</h1>
-    <p>Relatório gerado em: {datetime.now().strftime('%d/%m/%Y %H:%M:%S')}</p>
+    <p>Relatório gerado em: {horario_brasilia.strftime('%d/%m/%Y %H:%M:%S')}</p>
     <p>Total de consultas: {len(self.resultados)}</p>
     <p>Total de voos: {sum(len(r.get('voos', [])) for r in self.resultados)}</p>
 """
