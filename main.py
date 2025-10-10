@@ -3,7 +3,6 @@ import logging
 import time
 from datetime import datetime
 from playwright.sync_api import sync_playwright
-from datetime import datetime
 from zoneinfo import ZoneInfo
 
 horario_brasilia = datetime.now(ZoneInfo('America/Sao_Paulo'))
