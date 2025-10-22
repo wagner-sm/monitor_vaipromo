@@ -1,8 +1,8 @@
 {  
   "CONSULTAS": [  
     {  
-      "origem": "CGH",  
-      "destino": "CWB",   
+      "origem": "CWB",  
+      "destino": "CGH",   
       "data": "08/02/2026"
     }  
   ]  
