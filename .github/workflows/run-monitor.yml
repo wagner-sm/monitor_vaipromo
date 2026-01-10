@@ -1,0 +1,33 @@
+name: VaiPromo Monitor
+
+on:
+  schedule:
+    # Executa 2 vezes por dia (horário UTC)
+    - cron: '0 9,21 * * *'
+  workflow_dispatch:
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+
+    env:
+      TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+      TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+      TELEGRAM_MESSAGE_ID: ${{ secrets.TELEGRAM_MESSAGE_ID }} 
+
+    steps:
+      - name: Checkout do código
+        uses: actions/checkout@v4
+
+      - name: Configurar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Instalar dependências
+        run: |
+          pip install -r requirements.txt
+          playwright install chromium
+
+      - name: Executar script VaiPromo
+        run: python main.py

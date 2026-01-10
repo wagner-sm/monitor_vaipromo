@@ -1,0 +1,10 @@
+{  
+  "CONSULTAS": [  
+    {  
+      "origem": "CGH",  
+      "destino": "CWB",   
+      "data": "11/04/2026",
+	  "preco_alerta": 200
+    }  
+  ]  
+}
