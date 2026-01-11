@@ -305,13 +305,17 @@ class VaiPromoMonitor:
 
 
     def resumo_telegram(self):
+        # Adicionar timestamp no cabeçalho (convertendo UTC para Brasília UTC-3)
+        agora_utc = datetime.utcnow()
+        agora_brasilia = agora_utc - timedelta(hours=3)
+        timestamp = agora_brasilia.strftime("%d/%m/%Y às %H:%M")
         # Filtrar apenas resultados com alerta
         resultados_com_alerta = [r for r in self.resultados if r.get("alerta")]
         
         if not resultados_com_alerta:
-            return "🛫 <b>VaiPromo Monitor</b>\n\n✅ Nenhum preço abaixo do alerta configurado."
+            return f"🛫 <b>VaiPromo Monitor</b>\n🕒 <i>Atualizado em {timestamp}</i>\n\n✅ Nenhum preço abaixo do alerta configurado."
         
-        linhas = ["🛫 <b>VaiPromo Monitor</b>", "\n🚨 <b>ALERTAS DE PREÇO</b>"]
+        linhas = ["🛫 <b>VaiPromo Monitor</b>", f"🕒 <i>Atualizado em {timestamp} (Brasília)</i>", "\n🚨 <b>ALERTAS DE PREÇO</b>"]
 
         for r in resultados_com_alerta:
             c = r["consulta"]
