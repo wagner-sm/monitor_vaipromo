@@ -315,7 +315,7 @@ class VaiPromoMonitor:
         if not resultados_com_alerta:
             return f"🛫 <b>VaiPromo Monitor</b>\n🕒 <i>Atualizado em {timestamp}</i>\n\n✅ Nenhum preço abaixo do alerta configurado."
         
-        linhas = ["🛫 <b>VaiPromo Monitor</b>", f"🕒 <i>Atualizado em {timestamp} (Brasília)</i>", "\n🚨 <b>ALERTAS DE PREÇO</b>"]
+        linhas = ["🛫 <b>VaiPromo Monitor</b>", f"🕒 <i>Atualizado em {timestamp}</i>", "\n🚨 <b>ALERTAS DE PREÇO</b>"]
 
         for r in resultados_com_alerta:
             c = r["consulta"]
