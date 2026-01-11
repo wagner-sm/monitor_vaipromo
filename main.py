@@ -46,7 +46,6 @@ class VaiPromoMonitor:
                 "encontrado": True,
                 "menor_preco": menor_preco,
                 "preco_alerta": preco_alerta,
-                "economia": preco_alerta - menor_preco,
                 "companhia": resultado["voos"][0]["companhia"]
             }
         
