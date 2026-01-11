@@ -243,57 +243,53 @@ class VaiPromoMonitor:
         """Envia ou edita mensagem no Telegram"""
         token = os.getenv("TELEGRAM_BOT_TOKEN")
         chat_id = os.getenv("TELEGRAM_CHAT_ID")
-        
-        # NOVO: ID fixo da mensagem (você vai pegar esse ID na primeira execução)
         message_id = os.getenv("TELEGRAM_MESSAGE_ID")
-
+        
         if not token or not chat_id:
             logging.warning("Telegram não configurado")
             return
-
-        # Se já existe um message_id, EDITAR a mensagem existente
+        
+        # Função auxiliar para fazer requisição
+        def fazer_requisicao(url, payload):
+            data = json.dumps(payload).encode("utf-8")
+            req = urllib.request.Request(url, data=data, headers={"Content-Type": "application/json"})
+            response = urllib.request.urlopen(req, timeout=10)
+            return json.loads(response.read())
+        
+        # Payload comum para ambas as operações
+        payload_base = {
+            "chat_id": chat_id,
+            "text": texto,
+            "parse_mode": "HTML",
+            "disable_web_page_preview": True
+        }
+        
+        # Tentar editar mensagem existente
         if message_id:
             try:
                 logging.info(f"🔄 Tentando editar mensagem {message_id}...")
-                
                 url = f"https://api.telegram.org/bot{token}/editMessageText"
-                data = json.dumps({
-                    "chat_id": chat_id,
-                    "message_id": int(message_id),
-                    "text": texto,
-                    "parse_mode": "HTML",
-                    "disable_web_page_preview": True
-                }).encode("utf-8")
-
-                req = urllib.request.Request(url, data=data, headers={"Content-Type": "application/json"})
-                response = urllib.request.urlopen(req, timeout=10)
-                result = json.loads(response.read())
+                payload = {**payload_base, "message_id": int(message_id)}
+                
+                result = fazer_requisicao(url, payload)
                 
                 if result.get("ok"):
                     logging.info(f"✏️ Mensagem {message_id} editada com sucesso!")
                     return
                 else:
                     logging.warning(f"⚠️ API retornou erro: {result}")
-                
+                    
             except Exception as e:
                 logging.warning(f"⚠️ Erro ao editar mensagem {message_id}: {e}")
-                logging.info("📤 Enviando nova mensagem...")
+            
+            logging.info("📤 Enviando nova mensagem...")
         else:
             logging.info("ℹ️ TELEGRAM_MESSAGE_ID não configurado, enviando nova mensagem...")
-
-        # Se não existe message_id ou falhou ao editar, CRIAR nova mensagem
-        url = f"https://api.telegram.org/bot{token}/sendMessage"
-        data = json.dumps({
-            "chat_id": chat_id,
-            "text": texto,
-            "parse_mode": "HTML",
-            "disable_web_page_preview": True
-        }).encode("utf-8")
-
-        req = urllib.request.Request(url, data=data, headers={"Content-Type": "application/json"})
-        response = urllib.request.urlopen(req, timeout=10)
         
-        result = json.loads(response.read())
+        # Enviar nova mensagem
+        url = f"https://api.telegram.org/bot{token}/sendMessage"
+        result = fazer_requisicao(url, payload_base)
+        
         if result.get("ok"):
             novo_message_id = result["result"]["message_id"]
             logging.info(f"📤 Nova mensagem enviada: {novo_message_id}")
