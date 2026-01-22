@@ -23,7 +23,7 @@ class VaiPromoMonitor:
     # CONFIG
     # =======================
     def carregar_config(self):
-        with open("config_vp.json", "r", encoding="utf-8") as f:
+        with open("config.json", "r", encoding="utf-8") as f:
             config = json.load(f)
         logging.info(f"Configuração carregada: {len(config['CONSULTAS'])} consultas")
         return config
