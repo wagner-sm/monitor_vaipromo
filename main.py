@@ -23,33 +23,10 @@ class VaiPromoMonitor:
     # CONFIG
     # =======================
     def carregar_config(self):
-        with open("config.json", "r", encoding="utf-8") as f:
+        with open("config_vp.json", "r", encoding="utf-8") as f:
             config = json.load(f)
         logging.info(f"Configuração carregada: {len(config['CONSULTAS'])} consultas")
         return config
-
-    # =======================
-    # ALERTA DE PREÇO
-    # =======================
-    def verificar_alerta_preco(self, resultado):
-        """Verifica se o preço está abaixo do alerta configurado"""
-        consulta = resultado["consulta"]
-        
-        if not resultado["voos"] or "preco_alerta" not in consulta:
-            return None
-        
-        menor_preco = resultado["voos"][0]["valor"]
-        preco_alerta = consulta["preco_alerta"]
-        
-        if menor_preco <= preco_alerta:
-            return {
-                "encontrado": True,
-                "menor_preco": menor_preco,
-                "preco_alerta": preco_alerta,
-                "companhia": resultado["voos"][0]["companhia"]
-            }
-        
-        return None
 
     # =======================
     # HELPERS
@@ -178,7 +155,7 @@ class VaiPromoMonitor:
                     .map(v => ({ 
                         companhia: v.companhia, 
                         preco: v.preco,
-                        valor: v.valor  // Adicionar valor também
+                        valor: v.valor
                     }));
             }
             """)
@@ -196,13 +173,12 @@ class VaiPromoMonitor:
         resultado = {
             "consulta": consulta,
             "timestamp": datetime.now().isoformat(),
-            "voos": [],
-            "alerta": None
+            "voos": []
         }
 
         try:
             with sync_playwright() as p:
-                browser = p.chromium.launch(headless=True)
+                browser = p.chromium.launch(headless=False)
                 page = browser.new_page()
                 page.goto(self.url, timeout=60000)
 
@@ -224,9 +200,6 @@ class VaiPromoMonitor:
 
                 resultado["voos"] = self.extrair_voos(page)
                 resultado["url"] = page.url
-                
-                # Verificar alerta de preço
-                resultado["alerta"] = self.verificar_alerta_preco(resultado)
 
                 browser.close()
 
@@ -267,14 +240,14 @@ class VaiPromoMonitor:
         # Tentar editar mensagem existente
         if message_id:
             try:
-                logging.info(f"🔄 Tentando editar mensagem {message_id}...")
+                logging.info(f"✏️ Tentando editar mensagem {message_id}...")
                 url = f"https://api.telegram.org/bot{token}/editMessageText"
                 payload = {**payload_base, "message_id": int(message_id)}
                 
                 result = fazer_requisicao(url, payload)
                 
                 if result.get("ok"):
-                    logging.info(f"✏️ Mensagem {message_id} editada com sucesso!")
+                    logging.info(f"✅ Mensagem {message_id} editada com sucesso!")
                     return
                 else:
                     logging.warning(f"⚠️ API retornou erro: {result}")
@@ -284,7 +257,7 @@ class VaiPromoMonitor:
             
             logging.info("📤 Enviando nova mensagem...")
         else:
-            logging.info("ℹ️ TELEGRAM_MESSAGE_ID não configurado, enviando nova mensagem...")
+            logging.info("📤 TELEGRAM_MESSAGE_ID não configurado, enviando nova mensagem...")
         
         # Enviar nova mensagem
         url = f"https://api.telegram.org/bot{token}/sendMessage"
@@ -292,28 +265,21 @@ class VaiPromoMonitor:
         
         if result.get("ok"):
             novo_message_id = result["result"]["message_id"]
-            logging.info(f"📤 Nova mensagem enviada: {novo_message_id}")
-            logging.info(f"⚙️ Adicione esta variável no GitHub Actions:")
+            logging.info(f"✅ Nova mensagem enviada: {novo_message_id}")
+            logging.info(f"💡 Adicione esta variável no GitHub Actions:")
             logging.info(f"   TELEGRAM_MESSAGE_ID={novo_message_id}")
         else:
             logging.warning("⚠️ Mensagem enviada mas sem ID")
-
-
 
     def resumo_telegram(self):
         # Adicionar timestamp no cabeçalho (convertendo UTC para Brasília UTC-3)
         agora_utc = datetime.utcnow()
         agora_brasilia = agora_utc - timedelta(hours=3)
         timestamp = agora_brasilia.strftime("%d/%m/%Y às %H:%M")
-        # Filtrar apenas resultados com alerta
-        resultados_com_alerta = [r for r in self.resultados if r.get("alerta")]
         
-        if not resultados_com_alerta:
-            return f"🛫 <b>VaiPromo Monitor</b>\n🕒 <i>Atualizado em {timestamp}</i>\n\n✅ Nenhum preço abaixo do alerta configurado."
-        
-        linhas = ["🛫 <b>VaiPromo Monitor</b>", f"🕒 <i>Atualizado em {timestamp}</i>", "\n🚨 <b>ALERTAS DE PREÇO</b>"]
+        linhas = ["✈️ <b>VaiPromo Monitor</b>", f"🕐 <i>Atualizado em {timestamp}</i>"]
 
-        for r in resultados_com_alerta:
+        for r in self.resultados:
             c = r["consulta"]
             linhas.append(f"\n<b>{c['origem']} → {c['destino']} ({c['data']})</b>")
 
@@ -323,7 +289,7 @@ class VaiPromoMonitor:
                 # Mostrar top 3 voos
                 for i, v in enumerate(r["voos"][:3]):
                     if i == 0:
-                        linhas.append(f"🏆 <b>{v['companhia']}</b> – {v['preco']}")
+                        linhas.append(f"💰 <b>{v['companhia']}</b> – {v['preco']}")
                     else:
                         linhas.append(f"#{i+1} {v['companhia']} – {v['preco']}")
                 
@@ -342,7 +308,7 @@ class VaiPromoMonitor:
     def executar(self):
         self.executar_monitoramento()
         self.enviar_telegram(self.resumo_telegram())
-        logging.info("🎉 Execução concluída!")
+        logging.info("✅ Execução concluída!")
 
 
 # =======================
