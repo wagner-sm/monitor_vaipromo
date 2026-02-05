@@ -65,7 +65,7 @@ class VaiPromoMonitor:
     # =======================
     # CALENDÁRIO
     # =======================
-    def selecionar_data_como_humano(self, page, data_str):
+    def selecionar_data(self, page, data_str):
         data = datetime.strptime(data_str, "%d/%m/%Y")
         data_cy = data.strftime("%d-%m-%Y")
 
@@ -188,7 +188,7 @@ class VaiPromoMonitor:
                 self.preencher_localizacao(page, "arrival", consulta["destino"])
 
                 page.get_by_role("textbox", name="Ida").nth(1).click()
-                self.selecionar_data_como_humano(page, consulta["data"])
+                self.selecionar_data(page, consulta["data"])
 
                 page.evaluate(
                     """() => {
